@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GameZone - Panel del Dueño</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0d0d1a;
+    --surface: #161628;
+    --card: #1e1e35;
+    --border: #2a2a4a;
+    --accent: #7c4dff;
+    --accent2: #00e5ff;
+    --text: #f0f0ff;
+    --muted: #8888aa;
+    --success: #00c853;
+    --danger: #ff5252;
+    --warning: #ffd600;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+
+  /* ─── LOGIN ─── */
+  #login-screen { width: 400px; }
+  .login-logo { text-align: center; margin-bottom: 32px; }
+  .login-logo .logo-text { font-size: 32px; font-weight: 900; background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .login-logo p { color: var(--muted); font-size: 14px; margin-top: 6px; }
+  .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 36px; }
+  .login-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .login-card .sub { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+  .form-group { margin-bottom: 18px; }
+  .form-group label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 7px; font-weight: 500; }
+  .form-group input { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text); font-size: 15px; outline: none; transition: border-color 0.2s; }
+  .form-group input:focus { border-color: var(--accent); }
+  .form-group input::placeholder { color: var(--muted); }
+  .btn-login { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; transition: opacity 0.2s; }
+  .btn-login:hover { opacity: 0.85; }
+  .login-error { background: rgba(255,82,82,0.12); border: 1px solid rgba(255,82,82,0.3); border-radius: 10px; padding: 10px 14px; color: var(--danger); font-size: 13px; margin-top: 14px; display: none; }
+  .login-hint { color: var(--muted); font-size: 12px; text-align: center; margin-top: 16px; }
+
+  /* ─── ADMIN APP ─── */
+  #admin-app { display: none; width: 100vw; min-height: 100vh; flex-direction: row; }
+  body.logged .admin-app-body { display: flex; }
+
+  .sidebar { width: 220px; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 0; display: flex; flex-direction: column; min-height: 100vh; flex-shrink: 0; position: fixed; top: 0; left: 0; bottom: 0; }
+  .sidebar-logo { padding: 0 20px 24px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .sidebar-logo .logo-text { font-size: 20px; font-weight: 900; background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .sidebar-logo .logo-sub { font-size: 11px; color: var(--muted); }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 11px 20px; color: var(--muted); font-size: 14px; font-weight: 500; cursor: pointer; border-radius: 0; transition: all 0.15s; border-left: 3px solid transparent; }
+  .nav-item:hover { color: var(--text); background: rgba(124,77,255,0.08); }
+  .nav-item.active { color: var(--accent); background: rgba(124,77,255,0.12); border-left: 3px solid var(--accent); }
+  .nav-icon { font-size: 18px; }
+  .sidebar-bottom { margin-top: auto; padding: 0 20px 0; }
+  .user-chip { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; }
+  .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+  .user-info .name { font-size: 13px; font-weight: 600; }
+  .user-info .role { font-size: 11px; color: var(--muted); }
+  .btn-logout { width: 100%; background: rgba(255,82,82,0.1); border: 1px solid rgba(255,82,82,0.25); border-radius: 10px; color: var(--danger); padding: 9px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-logout:hover { background: rgba(255,82,82,0.2); }
+
+  .main-content { margin-left: 220px; flex: 1; padding: 28px 32px; min-height: 100vh; }
+
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+  .topbar h1 { font-size: 22px; font-weight: 800; }
+  .topbar .actions { display: flex; gap: 10px; }
+  .btn-action { display: flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); transition: all 0.15s; }
+  .btn-action:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-action.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-action.primary:hover { opacity: 0.85; color: #fff; }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
+  .stat-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .stat-value { font-size: 26px; font-weight: 800; }
+  .stat-value.green { color: var(--success); }
+  .stat-value.purple { color: var(--accent); }
+  .stat-value.yellow { color: var(--warning); }
+  .stat-change { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .stat-change.up { color: var(--success); }
+
+  /* TABLE */
+  .table-section { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .table-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--border); }
+  .table-header h3 { font-size: 16px; font-weight: 700; }
+  .search-input { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-size: 13px; outline: none; width: 200px; }
+  .search-input:focus { border-color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { padding: 12px 20px; text-align: left; font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(124,77,255,0.06); }
+  td { padding: 14px 20px; font-size: 14px; }
+  .td-game { display: flex; align-items: center; gap: 12px; }
+  .td-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .td-name { font-weight: 600; }
+  .td-genre { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .badge-accion { background: rgba(255,82,82,0.15); color: #ff7070; }
+  .badge-rpg { background: rgba(124,77,255,0.15); color: #a580ff; }
+  .badge-aventura { background: rgba(0,229,255,0.12); color: #00bcd4; }
+  .badge-deportes { background: rgba(0,200,83,0.12); color: #00c853; }
+  .badge-terror { background: rgba(200,100,0,0.15); color: #ff9800; }
+  .badge-estrategia { background: rgba(255,214,0,0.12); color: #ffd600; }
+  .price-td { font-weight: 700; color: var(--warning); }
+  .actions-td { display: flex; gap: 6px; }
+  .btn-edit { background: rgba(124,77,255,0.15); border: none; border-radius: 8px; color: var(--accent); padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .btn-delete { background: rgba(255,82,82,0.12); border: none; border-radius: 8px; color: var(--danger); padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+  /* VIEWS */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* MODAL AGREGAR/EDITAR */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 500; align-items: center; justify-content: center; }
+  .overlay.open { display: flex; }
+  .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 460px; max-width: 95vw; }
+  .modal-box h3 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .modal-form .form-group { margin-bottom: 16px; }
+  .modal-form select { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text); font-size: 14px; outline: none; }
+  .modal-form select:focus { border-color: var(--accent); }
+  .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  .btn-cancel { background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--muted); padding: 10px 20px; font-size: 14px; cursor: pointer; }
+  .btn-save { background: var(--accent); border: none; border-radius: 10px; color: #fff; padding: 10px 24px; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 28px; right: 28px; background: var(--success); color: #000; padding: 12px 22px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 600; transform: translateY(80px); transition: transform 0.3s; }
+  .toast.show { transform: translateY(0); }
+
+  /* DASHBOARD CHARTS (simple bars) */
+  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+  .chart-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 16px; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 100px; }
+  .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar { width: 100%; background: var(--accent); border-radius: 6px 6px 0 0; opacity: 0.85; }
+  .bar-label { font-size: 10px; color: var(--muted); }
+  .bar-val { font-size: 11px; color: var(--text); font-weight: 600; }
+  .recent-list { }
+  .recent-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .recent-item:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<!-- ─── LOGIN ─── -->
+<div id="login-screen">
+  <div class="login-logo">
+    <div class="logo-text">🎮 GameZone</div>
+    <p>Panel de administración</p>
+  </div>
+  <div class="login-card">
+    <h2>Iniciar sesión</h2>
+    <p class="sub">Solo el dueño puede acceder a este panel</p>
+    <div class="form-group">
+      <label>Usuario</label>
+      <input type="text" id="login-user" placeholder="admin" />
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <button class="btn-login" onclick="doLogin()">Entrar al panel</button>
+    <div class="login-error" id="login-error">❌ Usuario o contraseña incorrectos</div>
+    <div class="login-hint">Usuario: <strong>admin</strong> &nbsp;|&nbsp; Contraseña: <strong>1234</strong></div>
+  </div>
+</div>
+
+<!-- ─── ADMIN APP ─── -->
+<div id="admin-app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-text">GameZone</div>
+      <div class="logo-sub">Panel del Dueño</div>
+    </div>
+    <nav>
+      <div class="nav-item active" onclick="showView('dashboard', this)">
+        <span class="nav-icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showView('juegos', this)">
+        <span class="nav-icon">🎮</span> Juegos
+      </div>
+      <div class="nav-item" onclick="showView('ventas', this)">
+        <span class="nav-icon">💳</span> Ventas
+      </div>
+      <div class="nav-item" onclick="showView('clientes', this)">
+        <span class="nav-icon">👥</span> Clientes
+      </div>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="user-chip">
+        <div class="user-avatar">AD</div>
+        <div class="user-info">
+          <div class="name">Admin</div>
+          <div class="role">Dueño</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">🚪 Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- DASHBOARD -->
+    <div id="view-dashboard" class="view active">
+      <div class="topbar">
+        <h1>📊 Dashboard</h1>
+        <div class="actions">
+          <button class="btn-action">📅 Este mes</button>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Ventas totales</div>
+          <div class="stat-value green" id="stat-ventas">$0</div>
+          <div class="stat-change up">▲ +12% este mes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Juegos publicados</div>
+          <div class="stat-value purple" id="stat-juegos">0</div>
+          <div class="stat-change">en catálogo</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Clientes</div>
+          <div class="stat-value">247</div>
+          <div class="stat-change up">▲ +8 nuevos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pedidos hoy</div>
+          <div class="stat-value yellow">14</div>
+          <div class="stat-change">en proceso</div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <h4>Ventas por mes</h4>
+          <div class="bar-chart">
+            <div class="bar-wrap"><div class="bar-val">$820</div><div class="bar" style="height:55px"></div><div class="bar-label">Ene</div></div>
+            <div class="bar-wrap"><div class="bar-val">$940</div><div class="bar" style="height:63px"></div><div class="bar-label">Feb</div></div>
+            <div class="bar-wrap"><div class="bar-val">$780</div><div class="bar" style="height:52px"></div><div class="bar-label">Mar</div></div>
+            <div class="bar-wrap"><div class="bar-val">$1.1k</div><div class="bar" style="height:75px;background:var(--accent2)"></div><div class="bar-label">Abr</div></div>
+            <div class="bar-wrap"><div class="bar-val">$990</div><div class="bar" style="height:66px"></div><div class="bar-label">May</div></div>
+            <div class="bar-wrap"><div class="bar-val">$1.3k</div><div class="bar" style="height:88px;background:var(--success)"></div><div class="bar-label">Jun</div></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h4>Ventas recientes</h4>
+          <div class="recent-list">
+            <div class="recent-item"><span>⚔️ Shadow Striker</span><span style="color:var(--warning);font-weight:700">$8.99</span></div>
+            <div class="recent-item"><span>🧝 Elara Chronicles</span><span style="color:var(--warning);font-weight:700">$19.99</span></div>
+            <div class="recent-item"><span>🌌 Cyber Realm</span><span style="color:var(--warning);font-weight:700">$12.99</span></div>
+            <div class="recent-item"><span>🏎️ Turbo Racing</span><span style="color:var(--warning);font-weight:700">$9.99</span></div>
+            <div class="recent-item"><span>👻 Dark Corridor</span><span style="color:var(--warning);font-weight:700">$14.99</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JUEGOS -->
+    <div id="view-juegos" class="view">
+      <div class="topbar">
+        <h1>🎮 Juegos</h1>
+        <div class="actions">
+          <button class="btn-action primary" onclick="openModal()">+ Agregar juego</button>
+        </div>
+      </div>
+      <div class="table-section">
+        <div class="table-header">
+          <h3>Catálogo de juegos</h3>
+          <input class="search-input" placeholder="Buscar juego..." oninput="filterTable(this.value)">
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Juego</th>
+              <th>Categoría</th>
+              <th>Precio</th>
+              <th>Stock</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="games-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VENTAS -->
+    <div id="view-ventas" class="view">
+      <div class="topbar"><h1>💳 Ventas</h1></div>
+      <div class="table-section">
+        <div class="table-header"><h3>Historial de ventas</h3></div>
+        <table>
+          <thead><tr><th>#</th><th>Cliente</th><th>Juego</th><th>Monto</th><th>Fecha</th><th>Estado</th></tr></thead>
+          <tbody>
+            <tr><td>#1041</td><td>Martín G.</td><td>Shadow Striker</td><td class="price-td">$8.99</td><td>16/06/2025</td><td><span class="badge" style="background:rgba(0,200,83,.15);color:#00c853">Completado</span></td></tr>
+            <tr><td>#1040</td><td>Lucía P.</td><td>Elara Chronicles</td><td class="price-td">$19.99</td><td>16/06/2025</td><td><span class="badge" style="background:rgba(0,200,83,.15);color:#00c853">Completado</span></td></tr>
+            <tr><td>#1039</td><td>Diego M.</td><td>Cyber Realm</td><td class="price-td">$12.99</td><td>15/06/2025</td><td><span class="badge" style="background:rgba(255,214,0,.12);color:#ffd600">Pendiente</span></td></tr>
+            <tr><td>#1038</td><td>Ana R.</td><td>Turbo Racing</td><td class="price-td">$9.99</td><td>15/06/2025</td><td><span class="badge" style="background:rgba(0,200,83,.15);color:#00c853">Completado</span></td></tr>
+            <tr><td>#1037</td><td>Carlos F.</td><td>Dark Corridor</td><td class="price-td">$14.99</td><td>14/06/2025</td><td><span class="badge" style="background:rgba(255,82,82,.12);color:#ff5252">Cancelado</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CLIENTES -->
+    <div id="view-clientes" class="view">
+      <div class="topbar"><h1>👥 Clientes</h1></div>
+      <div class="table-section">
+        <div class="table-header"><h3>Lista de clientes</h3></div>
+        <table>
+          <thead><tr><th>Cliente</th><th>Email</th><th>Compras</th><th>Total gastado</th></tr></thead>
+          <tbody>
+            <tr><td><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">MG</div>Martín G.</div></td><td style="color:var(--muted)">martin@mail.com</td><td>8</td><td class="price-td">$124.80</td></tr>
+            <tr><td><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:50%;background:#00bcd4;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">LP</div>Lucía P.</div></td><td style="color:var(--muted)">lucia@mail.com</td><td>5</td><td class="price-td">$88.45</td></tr>
+            <tr><td><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:50%;background:#00c853;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">DM</div>Diego M.</div></td><td style="color:var(--muted)">diego@mail.com</td><td>3</td><td class="price-td">$46.97</td></tr>
+            <tr><td><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:50%;background:#ff9800;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">AR</div>Ana R.</div></td><td style="color:var(--muted)">ana@mail.com</td><td>12</td><td class="price-td">$203.60</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL AGREGAR/EDITAR JUEGO -->
+<div class="overlay" id="game-modal">
+  <div class="modal-box">
+    <h3 id="modal-title">➕ Agregar juego</h3>
+    <div class="modal-form">
+      <input type="hidden" id="edit-index" value="-1">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nombre del juego</label>
+          <input type="text" id="g-name" placeholder="Ej: Shadow Striker">
+        </div>
+        <div class="form-group">
+          <label>Emoji / ícono</label>
+          <input type="text" id="g-icon" placeholder="🎮">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Categoría</label>
+          <select id="g-cat">
+            <option value="accion">Acción</option>
+            <option value="rpg">RPG</option>
+            <option value="aventura">Aventura</option>
+            <option value="deportes">Deportes</option>
+            <option value="terror">Terror</option>
+            <option value="estrategia">Estrategia</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Precio (USD)</label>
+          <input type="number" id="g-price" placeholder="19.99" step="0.01" min="0">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Stock / licencias</label>
+          <input type="number" id="g-stock" placeholder="100" min="0">
+        </div>
+        <div class="form-group">
+          <label>Descuento (%)</label>
+          <input type="number" id="g-discount" placeholder="0" min="0" max="100">
+        </div>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveGame()">Guardar juego</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✅ Guardado</div>
+
+<script>
+// ─── DATA ───
+const COLORS = ['thumb-1','thumb-2','thumb-3','thumb-4','thumb-5','thumb-6'];
+const BG_MAP = { 'thumb-1':'background:linear-gradient(135deg,#1a0050,#4a0080)', 'thumb-2':'background:linear-gradient(135deg,#003050,#005080)', 'thumb-3':'background:linear-gradient(135deg,#500010,#800020)', 'thumb-4':'background:linear-gradient(135deg,#003020,#005040)', 'thumb-5':'background:linear-gradient(135deg,#504000,#807000)', 'thumb-6':'background:linear-gradient(135deg,#200050,#500090)' };
+
+let games = [
+  { name:'Shadow Striker', icon:'⚔️', cat:'accion', price:8.99, stock:50, discount:40 },
+  { name:'Elara Chronicles', icon:'🧝', cat:'rpg', price:19.99, stock:30, discount:0 },
+  { name:'Dark Corridor', icon:'👻', cat:'terror', price:14.99, stock:25, discount:0 },
+  { name:'Turbo Racing', icon:'🏎️', cat:'deportes', price:9.99, stock:60, discount:0 },
+  { name:'Lost Island', icon:'🏝️', cat:'aventura', price:11.99, stock:45, discount:25 },
+  { name:'Empire Builder', icon:'🏰', cat:'estrategia', price:16.99, stock:20, discount:0 },
+];
+
+// ─── AUTH ───
+const ADMIN_USER = 'admin';
+const ADMIN_PASS = '1234';
+
+function doLogin() {
+  const u = document.getElementById('login-user').value;
+  const p = document.getElementById('login-pass').value;
+  if (u === ADMIN_USER && p === ADMIN_PASS) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-app').style.display = 'flex';
+    document.body.style.alignItems = 'flex-start';
+    document.body.style.justifyContent = 'flex-start';
+    renderTable();
+    updateStats();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+function doLogout() {
+  document.getElementById('admin-app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'block';
+  document.body.style.alignItems = 'center';
+  document.body.style.justifyContent = 'center';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').style.display = 'none';
+}
+
+// ─── VIEWS ───
+function showView(name, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'juegos') renderTable();
+  if (name === 'dashboard') updateStats();
+}
+
+// ─── STATS ───
+function updateStats() {
+  document.getElementById('stat-juegos').textContent = games.length;
+  const total = games.reduce((a,g) => a + g.price * (1 - g.discount/100) * 5, 0);
+  document.getElementById('stat-ventas').textContent = '$' + total.toFixed(0);
+}
+
+// ─── TABLE ───
+function renderTable(filter='') {
+  const tbody = document.getElementById('games-table-body');
+  const filtered = games.filter(g => g.name.toLowerCase().includes(filter.toLowerCase()) || g.cat.includes(filter.toLowerCase()));
+  tbody.innerHTML = filtered.map((g, i) => {
+    const realI = games.indexOf(g);
+    const bg = BG_MAP[COLORS[realI % COLORS.length]];
+    const discountedPrice = g.discount > 0 ? (g.price * (1 - g.discount/100)).toFixed(2) : g.price.toFixed(2);
+    return `<tr>
+      <td><div class="td-game">
+        <div class="td-icon" style="${bg}">${g.icon}</div>
+        <div><div class="td-name">${g.name}</div><div class="td-genre">PC · Descarga digital</div></div>
+      </div></td>
+      <td><span class="badge badge-${g.cat}">${g.cat.charAt(0).toUpperCase()+g.cat.slice(1)}</span></td>
+      <td class="price-td">$${discountedPrice}${g.discount>0?` <span style="color:var(--muted);font-size:12px;text-decoration:line-through">$${g.price.toFixed(2)}</span>`:''}</td>
+      <td>${g.stock}</td>
+      <td class="actions-td">
+        <button class="btn-edit" onclick="editGame(${realI})">✏️ Editar</button>
+        <button class="btn-delete" onclick="deleteGame(${realI})">🗑️ Borrar</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterTable(q) { renderTable(q); }
+
+// ─── MODAL ───
+function openModal() {
+  document.getElementById('modal-title').textContent = '➕ Agregar juego';
+  document.getElementById('edit-index').value = -1;
+  document.getElementById('g-name').value = '';
+  document.getElementById('g-icon').value = '🎮';
+  document.getElementById('g-cat').value = 'accion';
+  document.getElementById('g-price').value = '';
+  document.getElementById('g-stock').value = '';
+  document.getElementById('g-discount').value = '0';
+  document.getElementById('game-modal').classList.add('open');
+}
+
+function editGame(i) {
+  const g = games[i];
+  document.getElementById('modal-title').textContent = '✏️ Editar juego';
+  document.getElementById('edit-index').value = i;
+  document.getElementById('g-name').value = g.name;
+  document.getElementById('g-icon').value = g.icon;
+  document.getElementById('g-cat').value = g.cat;
+  document.getElementById('g-price').value = g.price;
+  document.getElementById('g-stock').value = g.stock;
+  document.getElementById('g-discount').value = g.discount;
+  document.getElementById('game-modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('game-modal').classList.remove('open'); }
+
+function saveGame() {
+  const idx = parseInt(document.getElementById('edit-index').value);
+  const game = {
+    name: document.getElementById('g-name').value || 'Sin nombre',
+    icon: document.getElementById('g-icon').value || '🎮',
+    cat: document.getElementById('g-cat').value,
+    price: parseFloat(document.getElementById('g-price').value) || 0,
+    stock: parseInt(document.getElementById('g-stock').value) || 0,
+    discount: parseInt(document.getElementById('g-discount').value) || 0,
+  };
+  if (idx === -1) { games.push(game); } else { games[idx] = game; }
+  closeModal();
+  renderTable();
+  updateStats();
+  showToast(idx === -1 ? '✅ Juego agregado' : '✅ Juego actualizado');
+}
+
+function deleteGame(i) {
+  if (confirm('¿Eliminar "'+games[i].name+'" del catálogo?')) {
+    games.splice(i, 1);
+    renderTable();
+    updateStats();
+    showToast('🗑️ Juego eliminado');
+  }
+}
+
+// ─── TOAST ───
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
